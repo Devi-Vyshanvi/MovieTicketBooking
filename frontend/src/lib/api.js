@@ -1,8 +1,10 @@
 const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(
-    /\/$/,
-    '',
-  )
+  (import.meta.env.VITE_API_BASE_URL !== undefined
+    ? import.meta.env.VITE_API_BASE_URL
+    : import.meta.env.PROD
+      ? ''
+      : 'http://localhost:4000'
+  ).replace(/\/$/, '')
 
 export async function apiRequest(path, options = {}) {
   const { method = 'GET', body, token, headers = {} } = options
