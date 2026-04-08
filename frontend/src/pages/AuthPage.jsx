@@ -19,17 +19,22 @@ function AuthPage() {
     setFeedback({ type: 'idle', message: '' })
     setIsSubmitting(true)
 
+    const normalizedEmail = email.trim().toLowerCase()
+
     try {
       if (mode === 'register') {
-        await register(email, password)
+        await register(normalizedEmail, password)
       }
 
-      await login(email, password)
+      await login(normalizedEmail, password)
       navigate(destination, { replace: true })
     } catch (error) {
       setFeedback({
         type: 'error',
-        message: error.message || 'Authentication failed.',
+        message:
+          error.status === 404
+            ? 'Login endpoint not found. Check API base URL and auth route mapping.'
+            : error.message || 'Authentication failed.',
       })
     } finally {
       setIsSubmitting(false)

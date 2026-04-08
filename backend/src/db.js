@@ -1,14 +1,18 @@
+const fs = require('node:fs');
+const path = require('node:path');
 const dotenv = require('dotenv');
-const { Pool } = require('pg');
+const Database = require('better-sqlite3');
 
 dotenv.config();
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is missing. Add it to backend/.env.');
-}
+const sqliteDbPath = process.env.SQLITE_DB_PATH
+  ? path.resolve(process.cwd(), process.env.SQLITE_DB_PATH)
+  : path.resolve(__dirname, '..', 'db', 'movie-ticket-booking.sqlite');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+fs.mkdirSync(path.dirname(sqliteDbPath), { recursive: true });
 
-module.exports = { pool };
+const db = new Database(sqliteDbPath);
+db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
+
+module.exports = { db, sqliteDbPath };

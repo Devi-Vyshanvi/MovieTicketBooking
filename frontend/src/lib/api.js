@@ -1,15 +1,27 @@
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL !== undefined
-    ? import.meta.env.VITE_API_BASE_URL
-    : import.meta.env.PROD
-      ? ''
-      : 'http://localhost:4000'
-  ).replace(/\/$/, '')
+function normalizeBase(base) {
+  return String(base || '').replace(/\/$/, '')
+}
+
+function getApiBases() {
+  if (import.meta.env.VITE_API_BASE_URL !== undefined) {
+    return [normalizeBase(import.meta.env.VITE_API_BASE_URL)]
+  }
+
+  if (import.meta.env.PROD) {
+    return ['', '/_/backend']
+  }
+
+  return ['http://localhost:4000']
+}
+
+function buildUrl(base, path) {
+  return `${normalizeBase(base)}${path}`
+}
 
 export async function apiRequest(path, options = {}) {
   const { method = 'GET', body, token, headers = {} } = options
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const fetchOptions = {
     method,
     headers: {
       ...(body ? { 'Content-Type': 'application/json' } : {}),
@@ -17,7 +29,18 @@ export async function apiRequest(path, options = {}) {
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
-  })
+  }
+
+  const bases = getApiBases()
+  let response = null
+
+  for (let index = 0; index < bases.length; index += 1) {
+    response = await fetch(buildUrl(bases[index], path), fetchOptions)
+    const hasMoreCandidates = index < bases.length - 1
+    if (response.status !== 404 || !hasMoreCandidates) {
+      break
+    }
+  }
 
   const contentType = response.headers.get('content-type') || ''
   const isJson = contentType.includes('application/json')

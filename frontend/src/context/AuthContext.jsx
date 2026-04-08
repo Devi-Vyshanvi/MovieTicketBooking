@@ -23,6 +23,26 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) || '')
   const [user, setUser] = useState(() => getStoredUser())
 
+  async function requestAuth(paths, body) {
+    let lastError = null
+
+    for (const path of paths) {
+      try {
+        return await apiRequest(path, {
+          method: 'POST',
+          body,
+        })
+      } catch (error) {
+        lastError = error
+        if (error.status !== 404) {
+          throw error
+        }
+      }
+    }
+
+    throw lastError || new Error('Authentication request failed.')
+  }
+
   function persistSession(nextToken, nextUser) {
     setToken(nextToken)
     setUser(nextUser)
@@ -31,16 +51,16 @@ export function AuthProvider({ children }) {
   }
 
   async function register(email, password) {
-    return apiRequest('/api/auth/register', {
-      method: 'POST',
-      body: { email, password },
+    return requestAuth(['/api/auth/register', '/auth/register', '/api/register'], {
+      email,
+      password,
     })
   }
 
   async function login(email, password) {
-    const payload = await apiRequest('/api/auth/login', {
-      method: 'POST',
-      body: { email, password },
+    const payload = await requestAuth(['/api/auth/login', '/auth/login', '/api/login'], {
+      email,
+      password,
     })
 
     persistSession(payload.token, payload.user)

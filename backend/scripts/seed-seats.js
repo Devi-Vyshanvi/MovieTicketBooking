@@ -1,9 +1,27 @@
-const { pool } = require('../src/db');
+const { db } = require('../src/db');
 
 const theaters = [
-  { name: 'Grand Avenue Cinema', location: 'Downtown' },
-  { name: 'Harborlight Screens', location: 'Riverside' },
-  { name: 'Crown Square Multiplex', location: 'West End' },
+  {
+    name: 'Grand Avenue Cinema',
+    location: 'Downtown',
+    address: '120 Grand Ave, Downtown',
+    latitude: 17.385,
+    longitude: 78.4867,
+  },
+  {
+    name: 'Harborlight Screens',
+    location: 'Riverside',
+    address: '42 Riverside Rd, Riverfront District',
+    latitude: 17.4035,
+    longitude: 78.512,
+  },
+  {
+    name: 'Crown Square Multiplex',
+    location: 'West End',
+    address: '9 Crown Square, West End',
+    latitude: 17.3688,
+    longitude: 78.4572,
+  },
 ];
 
 const movies = [
@@ -65,79 +83,92 @@ function buildShowtimePlan(theaterIds, movieIds) {
   return plan;
 }
 
-async function seedDatabase() {
-  const client = await pool.connect();
+function seedDatabase() {
+  const resetData = db.transaction(() => {
+    db.exec('DELETE FROM bookings;');
+    db.exec('DELETE FROM seats;');
+    db.exec('DELETE FROM showtimes;');
+    db.exec('DELETE FROM movies;');
+    db.exec('DELETE FROM theaters;');
+    db.exec(
+      "DELETE FROM sqlite_sequence WHERE name IN ('bookings', 'seats', 'showtimes', 'movies', 'theaters');",
+    );
 
-  try {
-    await client.query('BEGIN');
-
-    await client.query(
-      'TRUNCATE TABLE bookings, seats, showtimes, movies, theaters RESTART IDENTITY CASCADE',
+    const insertTheater = db.prepare(
+      `
+        INSERT INTO theaters (name, location, address, latitude, longitude)
+        VALUES (?, ?, ?, ?, ?)
+      `,
+    );
+    const insertMovie = db.prepare(
+      `
+        INSERT INTO movies (title, genre, poster_url)
+        VALUES (?, ?, ?)
+      `,
+    );
+    const insertShowtime = db.prepare(
+      `
+        INSERT INTO showtimes (theater_id, movie_id, start_time, date)
+        VALUES (?, ?, ?, ?)
+      `,
+    );
+    const insertSeat = db.prepare(
+      `
+        INSERT INTO seats (seat_id, showtime_id, status)
+        VALUES (?, ?, 'available')
+      `,
     );
 
     const theaterIds = [];
     for (const theater of theaters) {
-      const result = await client.query(
-        `
-          INSERT INTO theaters (name, location)
-          VALUES ($1, $2)
-          RETURNING id
-        `,
-        [theater.name, theater.location],
+      const result = insertTheater.run(
+        theater.name,
+        theater.location,
+        theater.address,
+        theater.latitude,
+        theater.longitude,
       );
-      theaterIds.push(Number(result.rows[0].id));
+      theaterIds.push(Number(result.lastInsertRowid));
     }
 
     const movieIds = [];
     for (const movie of movies) {
-      const result = await client.query(
-        `
-          INSERT INTO movies (title, genre, poster_url)
-          VALUES ($1, $2, $3)
-          RETURNING id
-        `,
-        [movie.title, movie.genre, movie.posterUrl],
-      );
-      movieIds.push(Number(result.rows[0].id));
+      const result = insertMovie.run(movie.title, movie.genre, movie.posterUrl);
+      movieIds.push(Number(result.lastInsertRowid));
     }
 
+    const showtimeIds = [];
     const showtimePlan = buildShowtimePlan(theaterIds, movieIds);
     for (const showtime of showtimePlan) {
-      await client.query(
-        `
-          INSERT INTO showtimes (theater_id, movie_id, start_time, date)
-          VALUES ($1, $2, $3, $4)
-        `,
-        [showtime.theaterId, showtime.movieId, showtime.startTime, showtime.date],
+      const result = insertShowtime.run(
+        showtime.theaterId,
+        showtime.movieId,
+        showtime.startTime,
+        showtime.date,
       );
+      showtimeIds.push(Number(result.lastInsertRowid));
     }
 
-    await client.query(`
-      INSERT INTO seats (seat_id, showtime_id, status)
-      SELECT seat_id, showtime_id, 'available'
-      FROM generate_series(1, 20) AS seat_id
-      CROSS JOIN (SELECT id AS showtime_id FROM showtimes) AS all_showtimes
-      ON CONFLICT (seat_id, showtime_id)
-      DO UPDATE SET status = EXCLUDED.status
-    `);
+    for (const showtimeId of showtimeIds) {
+      for (let seatId = 1; seatId <= 20; seatId += 1) {
+        insertSeat.run(seatId, showtimeId);
+      }
+    }
 
-    await client.query('COMMIT');
-    console.log(
-      `Seed complete: ${theaters.length} theaters, ${movies.length} movies, ${showtimePlan.length} showtimes, and 20 seats per showtime.`,
-    );
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+    return { showtimeCount: showtimePlan.length };
+  });
+
+  const { showtimeCount } = resetData();
+  console.log(
+    `Seed complete: ${theaters.length} theaters, ${movies.length} movies, ${showtimeCount} showtimes, and 20 seats per showtime.`,
+  );
 }
 
-seedDatabase()
-  .catch((error) => {
-    console.error('Database seed failed:', error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await pool.end();
-  });
+try {
+  seedDatabase();
+} catch (error) {
+  console.error('Database seed failed:', error);
+  process.exitCode = 1;
+} finally {
+  db.close();
+}
