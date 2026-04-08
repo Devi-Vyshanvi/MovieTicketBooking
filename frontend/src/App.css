@@ -1,0 +1,284 @@
+.booking-app {
+  width: min(1060px, calc(100% - 2.5rem));
+  margin: 2.2rem auto;
+  padding: 1.8rem;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: 30px;
+  background: rgba(255, 252, 244, 0.84);
+  box-shadow:
+    0 28px 40px rgba(60, 52, 41, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.masthead {
+  margin-bottom: 1.8rem;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #89653a;
+}
+
+.masthead h1 {
+  margin: 0.5rem 0 0.4rem;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(2rem, 2.8vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: #172230;
+}
+
+.subhead {
+  margin: 0;
+  max-width: 58ch;
+  color: #4c5461;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.35fr 0.9fr;
+  gap: 1.2rem;
+}
+
+.hall-panel,
+.control-panel {
+  border: 1px solid rgba(23, 34, 48, 0.1);
+  border-radius: 24px;
+  padding: 1.25rem;
+  background: #fffdfa;
+}
+
+.hall-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.hall-panel::before {
+  content: '';
+  position: absolute;
+  inset: -60% -30% auto;
+  height: 220px;
+  transform: rotate(8deg);
+  background: linear-gradient(
+    90deg,
+    rgba(238, 198, 122, 0.22),
+    rgba(238, 198, 122, 0)
+  );
+  pointer-events: none;
+}
+
+.screen {
+  margin: 0 auto 1.4rem;
+  width: min(420px, 100%);
+  text-align: center;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #172230, #283244);
+  color: #f8f9fb;
+  letter-spacing: 0.14em;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  box-shadow: 0 12px 22px rgba(17, 24, 39, 0.27);
+}
+
+.seat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1.25rem;
+}
+
+.seat {
+  border: 0;
+  border-radius: 12px 12px 8px 8px;
+  min-height: 54px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.seat:hover:enabled {
+  transform: translateY(-2px);
+  filter: saturate(1.08);
+}
+
+.seat:disabled {
+  cursor: not-allowed;
+}
+
+.seat.available {
+  background: linear-gradient(160deg, #3eaf77, #23794f);
+}
+
+.seat.selected {
+  background: linear-gradient(160deg, #4a7fff, #2f57d6);
+}
+
+.seat.booked {
+  background: linear-gradient(160deg, #d86565, #ad3a3a);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  color: #4e5868;
+  font-size: 0.9rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  align-self: start;
+}
+
+.stat-block {
+  border: 1px solid rgba(23, 34, 48, 0.1);
+  border-radius: 14px;
+  padding: 0.7rem 0.85rem;
+  background: #fff;
+}
+
+.stat-block p {
+  margin: 0;
+  color: #667083;
+  font-size: 0.86rem;
+}
+
+.stat-block strong {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 1.55rem;
+  color: #172230;
+}
+
+.book-button,
+.cancel-button {
+  border: 0;
+  border-radius: 12px;
+  min-height: 46px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.book-button:hover:enabled,
+.cancel-button:hover:enabled {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.book-button {
+  background: #172230;
+  color: #fff;
+}
+
+.book-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cancel-form {
+  border-top: 1px solid rgba(23, 34, 48, 0.12);
+  margin-top: 0.2rem;
+  padding-top: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.62rem;
+}
+
+.cancel-form label {
+  font-weight: 600;
+  color: #273243;
+}
+
+.cancel-form input {
+  border: 1px solid rgba(23, 34, 48, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  background: #fffcf6;
+}
+
+.cancel-form input:focus {
+  outline: 2px solid rgba(42, 98, 213, 0.35);
+  outline-offset: 1px;
+}
+
+.cancel-button {
+  background: #f4ead7;
+  color: #3a2f1f;
+}
+
+.feedback {
+  margin: 0.2rem 0 0;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.9rem;
+  animation: fadeInUp 220ms ease;
+}
+
+.feedback.success {
+  background: rgba(52, 153, 98, 0.15);
+  border: 1px solid rgba(52, 153, 98, 0.4);
+  color: #1f5d3d;
+}
+
+.feedback.error {
+  background: rgba(184, 67, 67, 0.14);
+  border: 1px solid rgba(184, 67, 67, 0.4);
+  color: #7b2626;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 960px) {
+  .booking-app {
+    width: min(920px, calc(100% - 1.2rem));
+    margin: 1rem auto;
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .seat-grid {
+    gap: 0.55rem;
+  }
+
+  .seat {
+    min-height: 46px;
+    font-size: 0.84rem;
+  }
+}
